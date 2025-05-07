@@ -1,4 +1,4 @@
-// we may want to expand this
+// we may want to expand this with more possible evaluations
 use crate::{Card, Rank}; 
 
 /// The nine hand types ranked from weakest to strongest
