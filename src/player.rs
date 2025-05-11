@@ -10,6 +10,18 @@ pub struct Player {
     pub all_in: bool,
 }
 
+/// A no-limit Texas Hold'em action expressed in chips
+#[derive(Debug)]
+pub enum Action {
+    Fold,
+    Check,
+    Call,
+    Bet(u32),
+    Raise(u32), 
+    Allin, 
+}
+
+
 impl Player {
     pub fn new(id: usize, name: impl Into<String>, chips: u32) -> Self {
         Self {
