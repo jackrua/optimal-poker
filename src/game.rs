@@ -1,6 +1,6 @@
 //! game.rs - hand flow & street progression (no betting yet)
 
-use crate::{Deck, Table, Card}; 
+use crate::{Action, BetRound, Deck, Table, Card}; 
 
 /// The five phases of a Hold'em hand. 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -18,6 +18,7 @@ pub struct GameState {
     pub deck: Deck,
     pub street: Street, 
     pub board: Vec<Card>, 
+    pub bet_round: Option<BetRound>,
     pub pot: u32, 
 
     /// Seat index of the player whose turn is to act 
@@ -36,6 +37,7 @@ impl GameState {
             street: Street::Preflop, // nothing running yet 
             board: Vec::with_capacity(5), 
             pot: 0, 
+            bet_round: None, 
             to_act: 0,
             small_blind, 
         }
@@ -65,6 +67,7 @@ impl GameState {
         self.to_act = self.table.next_occupied(bb_idx); 
 
         self.street = Street::Preflop; 
+        self.bet_round = Some(BetRound::new(&self.table, self.table.dealer_button)); 
     }
 
     /// Move from preflop > flop > turn > river > showdows
@@ -96,13 +99,14 @@ impl GameState {
                 self.street = Street::Showdown;
             }
 
-            Street::Showdown => {}
+            Street::Showdown => {
+                self.bet_round = Some(BetRound::new(&self.table, self.table.dealer_button));
+            }
         }
 
         // first player to act is left of dealer except pre-flop
         self.to_act = self.table.next_occupied(self.table.dealer_button); 
     }
-
 
     /// Helper: pull a blind from a player into the pot (no side-pot handling)
     pub fn collect_blind(&mut self, seat_idx: usize, amount: u32) {
@@ -119,6 +123,24 @@ impl GameState {
         self.to_act = self.table.next_occupied(self.to_act); 
     } 
 
+    pub fn player_action(&mut self, seat_idx: usize, action: Action) {
+        if let Some(round) = &mut self.bet_round {
+            let next = round.act(&mut self.table, seat_idx, action);    
+            match next {
+                Some(idx) => self.to_act = idx, 
+                None => {
+                    // betting round finished: move chips to pot and maybe next street
+                    let sidepots = round.into_sidepots(&self.table); 
+                    self.pot += sidepots.iter().map(|(p, _)| *p).sum::<u32>(); 
 
+                    if self.street != Street::River {
+                        self.deal_next_street();
+                    } else {
+                        self.street = Street::Showdown; 
+                    }
+                }
+            }
+        }
+    }
 
 }
