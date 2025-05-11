@@ -1,9 +1,11 @@
+mod betting; 
 mod player;
 mod table; 
 mod evaluator; 
 mod game; 
 
-pub use player::Player;
+pub use betting::BetRound; 
+pub use player::{Action, Player};
 pub use table::Table; 
 pub use evaluator::{evaluate_seven, HandCategory, HandRank}; 
 pub use game::{GameState, Street}; 
