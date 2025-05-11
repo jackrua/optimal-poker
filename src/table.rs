@@ -76,6 +76,10 @@ impl Table {
             .unwrap()
     }
 
+    pub fn seat(&self, idx: usize) -> Option<&Player> {
+        self.seats.get(idx)?.as_ref() 
+    }
+
     pub fn seats_mut(&mut self) -> &mut [Option<Player>] {
         &mut self.seats
     }
@@ -83,6 +87,8 @@ impl Table {
     pub fn seat_mut(&mut self, idx: usize) -> Option<&mut Player> {
         self.seats.get_mut(idx)?.as_mut()
     }
+
+    pub fn seat_count(&self) -> usize { self.seats.len() }
 
     /// For quick debugging / REPL:
     pub fn debug_show(&self) {
